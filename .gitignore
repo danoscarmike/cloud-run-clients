@@ -1,61 +1,34 @@
-*.py[cod]
-*.sw[op]
+    
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
 
-# C extensions
-*.so
-
-# Packages
-*.egg
-*.egg-info
-dist
-build
-eggs
-parts
-bin
-var
-sdist
-develop-eggs
-.installed.cfg
-lib
-lib64
-__pycache__
-
-# Installer logs
-pip-log.txt
-
-# Unit test / coverage reports
-.coverage
-.nox
-.tox
-.cache
-.pytest_cache
-htmlcov
-
-# Translations
-*.mo
-
-# Mac
+/samples
+/.idea
 .DS_Store
 
-# Mr Developer
-.mr.developer.cfg
-.project
-.pydevproject
-
-# JetBrains
-.idea
-
-# Built documentation
-docs/_build
-docs/_build_doc2dash
-
-# Virtual environment
-env/
-coverage.xml
-
-# Make sure a generated file isn't accidentally committed.
-pylintrc
-pylintrc.test
-
-# Mypy
-.mypy_cache
+__pycache__/
+*.py[cod]
+*$py.class
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
