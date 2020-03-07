@@ -11,6 +11,7 @@ from flask import Flask, Response, request, send_from_directory, make_response
 app = Flask(__name__)
 
 PATH_TO_API_COMMON_PROTOS = '../api-common-protos/'
+UPLOAD_DIR = tempfile.mkdtemp(prefix='/tmp/', dir='./')
 CLIENT_DIR = tempfile.mkdtemp(prefix='/tmp/', dir='./')
 PROTO_DIR = tempfile.mkdtemp(prefix='/tmp/', dir='./')
 TAR_DIR = tempfile.mkdtemp(prefix='/tmp/', dir='./')
@@ -82,32 +83,28 @@ def form():
 @app.route('/generate', methods=["POST"])
 def generate_client():
     # upload zip/tarball of files from web form
-    upload_dir = tempfile.mkdtemp(prefix='/tmp/raw/', dir='./')
     in_file = request.files['proto_files']
     in_file_name = secure_filename(in_file.filename)
-    in_file_path = os.path.join(upload_dir, in_file_name)
+    in_file_path = os.path.join(UPLOAD_DIR, in_file_name)
     in_file.save(in_file_path)
     if not in_file:
         return "No file"
-
-    # create temporary directories for uploaded proto files and generated client files
-    proto_dir = tempfile.mkdtemp(prefix='/tmp/protos/', dir='./')
 
     # check file safety??
     # check type of uploaded file is tar or zip and extract
 
     if tarfile.is_tarfile(in_file_path):
         tf_in = tarfile.open(in_file_path, mode='r:gz')
-        tf_in.extractall(path=proto_dir)
+        tf_in.extractall(path=PROTO_DIR)
     elif zipfile.is_zipfile(in_file_path):
         zf_in = zipfile.ZipFile(in_file, 'r')
-        zf_in.extractall(path=proto_dir)
+        zf_in.extractall(path=PROTO_DIR)
     else:
         return "Not a valid tar file"
 
     # call protoc (with gapic plugin) on the uploaded directory
     # figure out how to construct the path strings that protoc needs
-    generate(proto_dir, get_path_to_protos(proto_dir))
+    generate(PROTO_DIR, get_path_to_protos(PROTO_DIR))
     # create tar ball for download
     mkTarFile()
 
