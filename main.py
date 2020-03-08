@@ -9,18 +9,19 @@ from flask import Flask, request, send_from_directory
 
 app = Flask(__name__)
 
-PATH_TO_API_COMMON_PROTOS = '../api-common-protos/'
+PATH_TO_API_COMMON_PROTOS = '/protos/'
+GOOGLEAPIS = '/googleapis/'
 UPLOAD_DIR = tempfile.mkdtemp(prefix='/tmp/', dir='./')
 CLIENT_DIR = tempfile.mkdtemp(prefix='/tmp/', dir='./')
 PROTO_DIR = tempfile.mkdtemp(prefix='/tmp/', dir='./')
 TAR_DIR = tempfile.mkdtemp(prefix='/tmp/', dir='./')
 
 
-def generate(proto_root_dir, path_to_protos):
+def generate(service_name, version):
     os.system(
-        f'protoc {path_to_protos}/*.proto \
+        f'/usr/local/bin/protoc /googleapis/google/cloud/{service_name}/{version}/*.proto \
             --proto_path={PATH_TO_API_COMMON_PROTOS} \
-            --proto_path={proto_root_dir} \
+            --proto_path={GOOGLEAPIS} \
             --python_gapic_out={CLIENT_DIR}'
     )
 
@@ -77,8 +78,7 @@ def mkTarFile(target_directory):
     oldpath = os.getcwd()
     os.chdir(target_directory)
     t = tarfile.open('client.tar.gz', mode='w:gz')
-    for fname in get_all_file_paths(CLIENT_DIR):
-        t.add(fname)
+    t.add(CLIENT_DIR, arcname='client')
     t.close()
     os.chdir(oldpath)
 
@@ -133,7 +133,7 @@ def generate_client():
 
     # call protoc (with gapic plugin) on the uploaded directory
     # figure out how to construct the path strings that protoc needs
-    generate(PROTO_DIR, get_path_to_protos(PROTO_DIR))
+    generate('vision','v1')
     # create tar ball for download
     mkTarFile(TAR_DIR)
 

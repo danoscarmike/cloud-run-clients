@@ -12,11 +12,11 @@ RUN apt-get update && apt-get install -y git
 COPY --from=gcr.io/gapic-images/api-common-protos:0.1.0 /usr/local/bin/protoc /usr/local/bin/protoc
 COPY --from=gcr.io/gapic-images/api-common-protos:0.1.0 /protos/ /protos/
 
-# Add our code to the Docker image.
-RUN git clone https://github.com/googleapis/gapic-generator-python.git
+# Clone into googleapis/googleapis
+RUN git clone https://github.com/googleapis/googleapis.git
 
 # Install the tool within the image.
-RUN pip install ./gapic-generator-python
+RUN pip install gapic-generator
 
 # Add our code to the Docker image.
 RUN mkdir -p /usr/src/cloud-run-clients/
