@@ -6,8 +6,6 @@ import zipfile
 
 from flask import Flask, Response, request, send_from_directory, make_response
 
-# If `entrypoint` is not defined in app.yaml, App Engine will look for an app
-# called `app` in `main.py`.
 app = Flask(__name__)
 
 PATH_TO_API_COMMON_PROTOS = '../api-common-protos/'
@@ -32,13 +30,15 @@ Function returns the directory path of the first proto file it finds while walki
 For this to work properly that first would need to import all others required through accurate relative paths
 '''
 def get_path_to_protos(dir):
-    for root, _, files in os.walk(dir):
+    for directory, _, files in os.walk(dir):
         for filename in files:
-            filepath = os.path.join(root, filename)
+            filepath = os.path.join(directory, filename)
             if filepath.lower().endswith('.proto'):
-                return root
+                return directory
 
-
+'''
+Function returns a list of paths to each file in a passed directory
+'''
 def get_all_file_paths(directory):
     # initializing empty file paths list 
     file_paths = []
@@ -53,7 +53,9 @@ def get_all_file_paths(directory):
     # returning all file paths 
     return file_paths
 
-
+'''
+Function creates a tarball from generated client files
+'''
 def mkTarFile():
     oldpath = os.getcwd()
     os.chdir(TAR_DIR)
@@ -108,11 +110,28 @@ def generate_client():
     # create tar ball for download
     mkTarFile()
 
+    return """
+        <html>
+            <body>
+                <h1>Success!</h1>
+                <p>Your client awaits...</p>
+                <body class="body">
+                    <div class="container" align="left">
+		                <a href="/download" target="blank"><button class='btn btn-default'>Download!</button></a>
+                    </div>
+                </body>
+        </html>
+    """
+
+
+@app.route('/download', methods=["GET"])
+def dlTarFile():
     return send_from_directory(
-        directory=TAR_DIR,
-        filename='client.tar.gz',
-        mimetype='application/gzip',
-        as_attachment=True)
+            directory=TAR_DIR,
+            filename='client.tar.gz',
+            mimetype='application/gzip',
+            as_attachment=True
+    )
 
 
 if __name__ == '__main__':
