@@ -25,16 +25,18 @@ def generate(proto_root_dir, path_to_protos):
     )
 
 
-'''
-Function to find the likely location of the main proto file
-Function returns the directory path of the first proto file it finds
-while walking through
-For this to work properly that first would need to import all others
-required through accurate relative paths
-'''
-
-
 def get_path_to_protos(dir):
+    '''Find the likely location of the main proto file
+
+    Args:
+        dir: absolute path to directory containing uploaded files
+
+    Returns:
+        The directory path of the first proto file found while
+        walking through ``dir``
+    For this to work properly that first would need to import all others
+    required through accurate relative paths
+    '''
     for directory, _, files in os.walk(dir):
         for filename in files:
             filepath = os.path.join(directory, filename)
@@ -42,12 +44,16 @@ def get_path_to_protos(dir):
                 return directory
 
 
-'''
-Function returns a list of paths to each file in a passed directory
-'''
-
-
 def get_all_file_paths(directory):
+    '''Returns list of paths to each file in a passed directory
+
+    Args:
+        directory: absolute path to a directory
+
+    Returns:
+        List of absolute paths to all files in the directory
+        and its descendent directories
+    '''
     # initializing empty file paths list
     file_paths = []
 
@@ -62,14 +68,14 @@ def get_all_file_paths(directory):
     return file_paths
 
 
-'''
-Function creates a tarball from generated client files
-'''
+def mkTarFile(target_directory):
+    '''Creates a tarball from generated client files
 
-
-def mkTarFile():
+    Args:
+        target_directory: location to save the created tarball
+    '''
     oldpath = os.getcwd()
-    os.chdir(TAR_DIR)
+    os.chdir(target_directory)
     t = tarfile.open('client.tar.gz', mode='w:gz')
     for fname in get_all_file_paths(CLIENT_DIR):
         t.add(fname)
@@ -98,11 +104,13 @@ def form():
 def generate_client():
     # upload zip/tarball of files from web form
     in_file = request.files['proto_files']
+
+    if not in_file:
+        return "No file"
+
     in_file_name = secure_filename(in_file.filename)
     in_file_path = os.path.join(UPLOAD_DIR, in_file_name)
     in_file.save(in_file_path)
-    if not in_file:
-        return "No file"
 
     # check file safety??
     # check type of uploaded file is tar or zip and extract
@@ -114,13 +122,20 @@ def generate_client():
         zf_in = zipfile.ZipFile(in_file, 'r')
         zf_in.extractall(path=PROTO_DIR)
     else:
-        return "Not a valid tar file"
+        return """
+        <html>
+            <body>
+                <h1>Not a valid file.</h1>
+                <p>Please upload tar.gz or zip only.</p>
+            </body>
+        </html>
+        """
 
     # call protoc (with gapic plugin) on the uploaded directory
     # figure out how to construct the path strings that protoc needs
     generate(PROTO_DIR, get_path_to_protos(PROTO_DIR))
     # create tar ball for download
-    mkTarFile()
+    mkTarFile(TAR_DIR)
 
     return """
         <html>
