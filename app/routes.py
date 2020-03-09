@@ -1,48 +1,21 @@
 import os
 import sys
 import tarfile
-import tempfile
 from werkzeug.utils import secure_filename
 import zipfile
 
+from app import app
+
 from flask import Flask, request, send_from_directory
 
-app = Flask(__name__)
 
-PATH_TO_API_COMMON_PROTOS = '/protos/'
-GOOGLEAPIS = '/googleapis/'
-UPLOAD_DIR = tempfile.mkdtemp(prefix='/tmp/', dir='./')
-CLIENT_DIR = tempfile.mkdtemp(prefix='/tmp/', dir='./')
-PROTO_DIR = tempfile.mkdtemp(prefix='/tmp/', dir='./')
-TAR_DIR = tempfile.mkdtemp(prefix='/tmp/', dir='./')
-
-
-def generate(service_name, version):
+def run_protoc(service_name, version):
     os.system(
         f'/usr/local/bin/protoc /googleapis/google/cloud/{service_name}/{version}/*.proto \
-            --proto_path={PATH_TO_API_COMMON_PROTOS} \
-            --proto_path={GOOGLEAPIS} \
-            --python_gapic_out={CLIENT_DIR}'
+            --proto_path={app.config["PATH_TO_API_COMMON_PROTOS"]} \
+            --proto_path={app.config["GOOGLEAPIS"]} \
+            --python_gapic_out={app.config["CLIENT_DIR"]}'
     )
-
-
-def get_path_to_protos(dir):
-    '''Find the likely location of the main proto file
-
-    Args:
-        dir: absolute path to directory containing uploaded files
-
-    Returns:
-        The directory path of the first proto file found while
-        walking through ``dir``
-    For this to work properly that first would need to import all others
-    required through accurate relative paths
-    '''
-    for directory, _, files in os.walk(dir):
-        for filename in files:
-            filepath = os.path.join(directory, filename)
-            if filepath.lower().endswith('.proto'):
-                return directory
 
 
 def get_all_file_paths(directory):
@@ -69,21 +42,20 @@ def get_all_file_paths(directory):
     return file_paths
 
 
-def mkTarFile(target_directory):
+def create_tarball(client_directory, output_directory):
     '''Creates a tarball from generated client files
 
     Args:
         target_directory: location to save the created tarball
     '''
-    oldpath = os.getcwd()
-    os.chdir(target_directory)
+    os.chdir(output_directory)
     t = tarfile.open('client.tar.gz', mode='w:gz')
-    t.add(CLIENT_DIR, arcname='client')
+    t.add(client_directory, arcname='cloud-run-client')
     t.close()
-    os.chdir(oldpath)
 
 
 @app.route('/')
+@app.route('/index')
 def form():
     return """
         <html>
@@ -109,7 +81,7 @@ def generate_client():
         return "No file"
 
     in_file_name = secure_filename(in_file.filename)
-    in_file_path = os.path.join(UPLOAD_DIR, in_file_name)
+    in_file_path = os.path.join(app.config['UPLOAD_DIR'], in_file_name)
     in_file.save(in_file_path)
 
     # check file safety??
@@ -117,10 +89,10 @@ def generate_client():
 
     if tarfile.is_tarfile(in_file_path):
         tf_in = tarfile.open(in_file_path, mode='r:gz')
-        tf_in.extractall(path=PROTO_DIR)
+        tf_in.extractall(path=app.config['PROTO_DIR'])
     elif zipfile.is_zipfile(in_file_path):
         zf_in = zipfile.ZipFile(in_file, 'r')
-        zf_in.extractall(path=PROTO_DIR)
+        zf_in.extractall(path=app.config['PROTO_DIR'])
     else:
         return """
         <html>
@@ -132,10 +104,12 @@ def generate_client():
         """
 
     # call protoc (with gapic plugin) on the uploaded directory
-    # figure out how to construct the path strings that protoc needs
-    generate('vision','v1')
+    run_protoc('vision','v1')
+
     # create tar ball for download
-    mkTarFile(TAR_DIR)
+    print(f'Client temp directory: {app.config["CLIENT_DIR"]}', flush=True)
+    print(f'Output temp directory: {app.config["DOWNLOAD_DIR"]}', flush=True)
+    create_tarball(app.config["CLIENT_DIR"], app.config["DOWNLOAD_DIR"])
 
     return """
         <html>
@@ -153,17 +127,14 @@ def generate_client():
 
 
 @app.route('/download', methods=["GET"])
-def dlTarFile():
+def download():
+    print(f'Sending from {app.config}', flush=True)
     return send_from_directory(
-            directory=TAR_DIR,
-            filename='client.tar.gz',
-            mimetype='application/gzip',
+            directory=app.config["DOWNLOAD_DIR"],
+            filename='./client.tar.gz',
             as_attachment=True
     )
 
 
-if __name__ == '__main__':
-    if len(sys.argv) > 1 and sys.argv[1] == 'local':
-        app.run(host='127.0.0.1', port=8080, debug=True)
-    else:
-        app.run(host='0.0.0.0', debug=True)
+if __name__ == "__main__":
+    app.run(host='0.0.0.0')

@@ -1,0 +1,2 @@
+FLASK_APP=cloud_run_clients
+FLASK_ENV=development

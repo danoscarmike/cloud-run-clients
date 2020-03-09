@@ -19,11 +19,14 @@ RUN git clone https://github.com/googleapis/googleapis.git
 RUN pip install gapic-generator
 
 # Add our code to the Docker image.
-RUN mkdir -p /usr/src/cloud-run-clients/
-COPY ./* /usr/src/cloud-run-clients/
+RUN mkdir -p /src/
+COPY ./ /src/
 
 # Install flask app requirements
-RUN pip install -r /usr/src/cloud-run-clients/requirements.txt
+RUN pip install -r /src/requirements.txt
+WORKDIR  /src/
+ENV FLASK_APP=cloud_run_clients
+ENV FLASK_DEBUG=0
 
 # Spin up flask app
-CMD ["python3", "/usr/src/cloud-run-clients/main.py"]
+ENTRYPOINT ["flask", "run", "--host", "0.0.0.0"]
