@@ -1,32 +1,38 @@
 FROM python:3.7-slim
 
-# Install system packages.
+# Create user so app isn't run as root
+RUN adduser cloudrunclients
+
+# Install system packages
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends \
-    pandoc \
+  && apt-get install -y --no-install-recommends pandoc \
   && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && apt-get install -y git
+RUN apt-get update \
+  && apt-get install -y git
 
-# Add protoc and our common protos.
+# Add protoc and Google's common protos and API proto repository
 COPY --from=gcr.io/gapic-images/api-common-protos:0.1.0 /usr/local/bin/protoc /usr/local/bin/protoc
 COPY --from=gcr.io/gapic-images/api-common-protos:0.1.0 /protos/ /protos/
-
-# Clone into googleapis/googleapis
 RUN git clone https://github.com/googleapis/googleapis.git
 
-# Install the tool within the image.
+# Install the Python client generator
 RUN pip install gapic-generator
 
-# Add our code to the Docker image.
-RUN mkdir -p /src/
-COPY ./ /src/
+# Set default working directory to user's home
+WORKDIR /home/cloudrunclients
+
+# Install dependencies in python virtual environment
+COPY requirements.txt requirements.txt
+RUN pip install -r requirements.txt
+
+# Copy over app files
+COPY app app
+COPY config.py cloud_run_clients.py ./
 
 # Install flask app requirements
-RUN pip install -r /src/requirements.txt
-WORKDIR  /src/
 ENV FLASK_APP=cloud_run_clients
-ENV FLASK_DEBUG=0
+ENV FLASK_ENV=development
 
 # Spin up flask app
 ENTRYPOINT ["flask", "run", "--host", "0.0.0.0"]
