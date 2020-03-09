@@ -46,6 +46,7 @@ def create_tarball(client_directory, output_directory):
     '''Creates a tarball from generated client files
 
     Args:
+        client_directory: location of files to add to the tarball
         target_directory: location to save the created tarball
     '''
     os.chdir(output_directory)
@@ -108,7 +109,7 @@ def generate_client():
 
     # create tar ball for download
     print(f'Client temp directory: {app.config["CLIENT_DIR"]}', flush=True)
-    print(f'Output temp directory: {app.config["DOWNLOAD_DIR"]}', flush=True)
+    print(f'Download temp directory: {app.config["DOWNLOAD_DIR"]}', flush=True)
     create_tarball(app.config["CLIENT_DIR"], app.config["DOWNLOAD_DIR"])
 
     return """
@@ -126,12 +127,12 @@ def generate_client():
     """
 
 
-@app.route('/download', methods=["GET"])
-def download():
-    print(f'Sending from {app.config}', flush=True)
+@app.route('/download/<path:filename>', methods=["GET", "POST"])
+def download(filename):
     return send_from_directory(
-            directory=app.config["DOWNLOAD_DIR"],
-            filename='./client.tar.gz',
+            directory=app.config['DOWNLOAD_DIR'],
+            mimetype='application/gzip',
+            filename=filename,
             as_attachment=True
     )
 

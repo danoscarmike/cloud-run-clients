@@ -21,6 +21,10 @@ RUN pip install gapic-generator
 
 # Set default working directory to user's home
 WORKDIR /home/cloudrunclients
+RUN mkdir upload
+RUN mkdir download
+RUN mkdir client
+RUN mkdir proto
 
 # Install dependencies in python virtual environment
 COPY requirements.txt requirements.txt
