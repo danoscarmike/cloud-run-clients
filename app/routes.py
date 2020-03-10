@@ -127,12 +127,12 @@ def generate_client():
     """
 
 
-@app.route('/download/<path:filename>', methods=["GET", "POST"])
-def download(filename):
+@app.route('/download', methods=["GET"])
+def download():
     return send_from_directory(
             directory=app.config['DOWNLOAD_DIR'],
             mimetype='application/gzip',
-            filename=filename,
+            filename='client.tar.gz',
             as_attachment=True
     )
 
