@@ -6,7 +6,7 @@ import zipfile
 
 from app import app
 
-from flask import Flask, request, send_from_directory
+from flask import Flask, request, send_from_directory, render_template
 
 
 def run_protoc(service_name, version):
@@ -57,6 +57,21 @@ def create_tarball(client_directory, output_directory):
 
 @app.route('/')
 @app.route('/index')
+def index():
+    user = {'username':'danoscarmike'}
+    services = [
+        {
+            'meta': {'title': 'Cloud Vision API', 'name': 'vision', 'version': 'v1'},
+            'url': 'https://github.com/googleapis/googleapis/tree/master/google/cloud/vision/v1'
+        },
+        {
+            'meta': {'title': 'Cloud Translation API', 'name': 'translate', 'version': 'v3'},
+            'url': 'https://github.com/googleapis/googleapis/tree/master/google/cloud/translate/v3'
+        }
+    ]
+    return render_template('index.html', title='Home', user=user, services=services)    
+
+@app.route('/input')
 def form():
     return """
         <html>

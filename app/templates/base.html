@@ -1,0 +1,18 @@
+<html>
+    <head>
+        {% if title %}
+        <title>{{ title }} - Cloud Run Clients</title>
+        {% else %}
+        <title>Welcome to Cloud Run Clients!</title>
+        {% endif %}
+    </head>
+    <body>
+        <div id="header">Cloud Run Clients: <a href='/index'>Home</a></div>
+        <hr>
+        {% block content %}{% endblock %}
+        <hr>
+        <div id="footer">
+            <p>&copy; Copyright <a href="http://www.danoscarmike.com">DanO/M</a> 2020</p>
+        </div>
+    </body>
+</html>

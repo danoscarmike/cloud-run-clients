@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Hi {{ user.username }}!</h1>
+    <p>Choose a client to generate:</p>
+    {% for service in services %}
+    <div>
+        <p><a href='/generate'>{{ service.meta.title }}</a></p>
+    </div>
+    {% endfor %}
+{% endblock %}
