@@ -5,7 +5,7 @@
     <p>Choose a client to generate:</p>
     {% for service in services %}
     <div>
-        <p><a href='/generate'>{{ service.meta.title }}</a></p>
+        <p><a href="{{ url_for('generate_client') }}">{{ service.meta.title }}</a></p>
     </div>
     {% endfor %}
 {% endblock %}
