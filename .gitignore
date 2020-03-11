@@ -13,6 +13,7 @@ venv.bak/
 .DS_Store
 
 # VSCode
+.vscode
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
