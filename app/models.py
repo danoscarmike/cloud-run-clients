@@ -14,8 +14,12 @@ class User(db.Model):
 class Service(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128))
+    version = db.Column(db.String(64))
     proto_url = db.Column(db.String(128))
     proto_url_type = db.Column(db.Enum(ProtoSourceEnum))
+
+    def __repr__(self):
+        return f'<Service {self.name}:{self.version}>'
 
 class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -26,4 +30,4 @@ class Event(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     def __repr__(self):
-        return f'<Event {self.id}/{self.created}>'
+        return f'<Event {self.id}>'
