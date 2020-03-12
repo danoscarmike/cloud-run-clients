@@ -1,11 +1,15 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>Hi {{ user.username }}!</h1>
+    {% if current_user.is_anonymous %}
+    <h1>Hi there! Do we know each other?</h1>
+    {% else %}
+    <h1>Hi {{ current_user.first_name }}!</h1>
+    {% endif %}
     <p>Choose a client to generate:</p>
     {% for service in services %}
     <div>
-        <p><a href="{{ url_for('generate_client') }}">{{ service.meta.title }}</a></p>
+        <p><a href="{{ url_for('generate_client') }}">{{ service.title }}</a></p>
     </div>
     {% endfor %}
 {% endblock %}

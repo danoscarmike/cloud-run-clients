@@ -1,13 +1,15 @@
 import os
 import sys
 import tarfile
-from werkzeug.utils import secure_filename
 import zipfile
 
 from app import app
 from app.forms import LoginForm
-
+from app.models import User, Service
 from flask import flash, Flask, redirect, render_template, request, send_from_directory, url_for
+from flask_login import current_user, login_required, login_user, logout_user
+from werkzeug.urls import url_parse
+from werkzeug.utils import secure_filename
 
 
 def run_protoc(service_name, version):
@@ -46,9 +48,9 @@ def get_all_file_paths(directory):
 def create_tarball(client_directory, output_directory):
     '''Creates a tarball from generated client files
 
-    Args:
-        client_directory: location of files to add to the tarball
-        target_directory: location to save the created tarball
+    Arguments:
+        client_directory {string} -- location of files to add to the tarball
+        target_directory {string} -- location to save the created tarball
     '''
     os.chdir(output_directory)
     t = tarfile.open('client.tar.gz', mode='w:gz')
@@ -59,28 +61,36 @@ def create_tarball(client_directory, output_directory):
 @app.route('/')
 @app.route('/index')
 def index():
-    user = {'username':'danoscarmike'}
-    services = [
-        {
-            'meta': {'title': 'Cloud Vision API', 'name': 'vision', 'version': 'v1'},
-            'url': 'https://github.com/googleapis/googleapis/tree/master/google/cloud/vision/v1'
-        },
-        {
-            'meta': {'title': 'Cloud Translation API', 'name': 'translate', 'version': 'v3'},
-            'url': 'https://github.com/googleapis/googleapis/tree/master/google/cloud/translate/v3'
-        }
-    ]
-    return render_template('index.html', title='Home', user=user, services=services)    
+    return render_template('index.html', title='Home', user=current_user, services=Service.query.all())    
 
 
 @app.route('/login', methods=['GET','POST'])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
     form = LoginForm()
     if form.validate_on_submit():
-        flash(f'{form.username.data} logged in (Remember Me: {form.remember_me.data}).')
+        user = User.query.filter_by(username=form.username.data).first()
+        if user is None or not user.check_password(form.password.data):
+            flash('Invalid username or password')
+            return redirect(url_for('login'))
+        login_user(user, remember=form.remember_me.data)
+        next_page = request.args.get('next')
+        if not next_page or url_parse(next_page).netloc != '':
+            next_page = url_for('index')
         return redirect(url_for('index'))
     return render_template('login.html', title='Sign In', form=form)
 
+
+@app.route('/logout')
+def logout():
+    '''Logs out current user.
+    
+    Returns:
+        Flask.redirect -- redirects to 'index'
+    '''
+    logout_user()
+    return redirect(url_for('index'))
 
 @app.route('/input')
 def form():
@@ -100,7 +110,17 @@ def form():
 
 
 @app.route('/generate', methods=["POST"])
+@login_required
 def generate_client():
+    '''Generates client library, creates a tarball containing
+    the source code and downloads it.
+    
+    Raises:
+        GeneratorError -- on failure to generate client.
+
+    Returns:
+        Flask.redirect -- redirects on success.
+    '''
     # upload zip/tarball of files from web form
     in_file = request.files['proto_files']
 
@@ -154,6 +174,7 @@ def generate_client():
 
 
 @app.route('/download', methods=["GET"])
+@login_required
 def download():
     return send_from_directory(
             directory=app.config['DOWNLOAD_DIR'],

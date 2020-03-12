@@ -1,8 +1,8 @@
-"""users table
+"""empty message
 
-Revision ID: db3c7522dbb3
+Revision ID: 885c929ba8c3
 Revises: 
-Create Date: 2020-03-11 00:09:34.603381
+Create Date: 2020-03-11 22:12:07.993123
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'db3c7522dbb3'
+revision = '885c929ba8c3'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -21,13 +21,21 @@ def upgrade():
     op.create_table('service',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=128), nullable=True),
+    sa.Column('title', sa.String(length=128), nullable=True),
+    sa.Column('version', sa.String(length=64), nullable=True),
     sa.Column('proto_url', sa.String(length=128), nullable=True),
-    sa.Column('proto_url_type', sa.Enum('google', 'user', name='protosourceenum'), nullable=True),
+    sa.Column('proto_source', sa.Enum('googleapis', 'user', name='protosourceenum'), nullable=True),
+    sa.Column('is_google_api', sa.Boolean(), nullable=True),
+    sa.Column('updated', sa.DateTime(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_index(op.f('ix_service_name'), 'service', ['name'], unique=False)
+    op.create_index(op.f('ix_service_updated'), 'service', ['updated'], unique=False)
     op.create_table('user',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('username', sa.String(length=64), nullable=True),
+    sa.Column('first_name', sa.String(length=128), nullable=True),
+    sa.Column('last_name', sa.String(length=128), nullable=True),
     sa.Column('email', sa.String(length=128), nullable=True),
     sa.Column('password_hash', sa.String(length=128), nullable=True),
     sa.PrimaryKeyConstraint('id')
@@ -39,7 +47,6 @@ def upgrade():
     sa.Column('created', sa.DateTime(), nullable=True),
     sa.Column('service_id', sa.Integer(), nullable=True),
     sa.Column('success', sa.Boolean(), nullable=True),
-    sa.Column('google_api', sa.Boolean(), nullable=True),
     sa.Column('user_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['service_id'], ['service.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
@@ -56,5 +63,7 @@ def downgrade():
     op.drop_index(op.f('ix_user_username'), table_name='user')
     op.drop_index(op.f('ix_user_email'), table_name='user')
     op.drop_table('user')
+    op.drop_index(op.f('ix_service_updated'), table_name='service')
+    op.drop_index(op.f('ix_service_name'), table_name='service')
     op.drop_table('service')
     # ### end Alembic commands ###
