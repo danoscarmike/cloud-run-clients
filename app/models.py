@@ -1,7 +1,9 @@
 from app import db, login
 from app.enums import ProtoSourceEnum
 from flask_login import UserMixin
+from hashlib import md5
 from werkzeug.security import check_password_hash, generate_password_hash
+
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -21,6 +23,10 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+    def avatar(self, size):
+        digest = md5(self.email.lower().encode('utf-8')).hexdigest()
+        return f'https://www.gravatar.com/avatar/{digest}?d=robohash&s={size}'
+
 class Service(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128), index=True)
@@ -35,6 +41,7 @@ class Service(db.Model):
     def __repr__(self):
         return f'<Service {self.name}:{self.version}>'
 
+
 class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     created = db.Column(db.DateTime, index=True)
@@ -44,6 +51,9 @@ class Event(db.Model):
 
     def __repr__(self):
         return f'<Event {self.id}>'
+
+    def format_datetime(self, created):
+        return self.created.strftime("%A, %b %d, %Y %t %Z")
 
 @login.user_loader
 def load_user(id):

@@ -1,3 +1,5 @@
+import pytz
+
 from app import db
 from app.enums import ProtoSourceEnum
 from app.models import User, Service, Event
@@ -27,7 +29,7 @@ vision = Service(
         googleapis/tree/master/google/cloud/vision/v1',
     proto_source=ProtoSourceEnum.googleapis,
     is_google_api=True,
-    updated=dt.now()
+    updated=pytz.utc.localize(dt.utcnow())
 )
 
 translate = Service(
@@ -38,7 +40,7 @@ translate = Service(
         googleapis/tree/master/google/cloud/translate/v3',
     proto_source=ProtoSourceEnum.googleapis,
     is_google_api=True,
-    updated=dt.now()
+    updated=pytz.utc.localize(dt.utcnow())
 )
 
 db.session.add(dan)
@@ -47,9 +49,16 @@ db.session.add(vision)
 db.session.add(translate)
 
 dan_event1 = Event(
-    created=dt.now(),
+    created=pytz.utc.localize(dt.utcnow()),
     service_id=Service.query.filter_by(name='vision').first().id,
     success=True,
+    user_id=User.query.filter_by(username='danoscarmike').first().id
+)
+
+dan_event2 = Event(
+    created=pytz.utc.localize(dt.utcnow()),
+    service_id=Service.query.filter_by(name='translate').first().id,
+    success=False,
     user_id=User.query.filter_by(username='danoscarmike').first().id
 )
 
