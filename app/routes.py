@@ -116,6 +116,15 @@ def register():
         return redirect(next_page)
     return render_template('register.html', title='Register', form=form)
 
+
+@app.route('/user/<username>')
+@login_required
+def user(username):
+    user = User.query.filter_by(username=username).first_or_404()
+    events = user.events
+    return render_template('user.html', user=user, events=events)
+
+
 @app.route('/input')
 def form():
     return """

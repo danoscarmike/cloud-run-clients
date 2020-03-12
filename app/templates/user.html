@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>User: {{ user.username }}</h1>
+    <hr>
+    {% for event in events %}
+    <p>
+        {% if event.success %}
+        {{ event.service }} was successfully generated on {{ event.created }}.
+        {% else %}
+        {{ event.service }} failed to generate on {{ event.created }}.
+        {% endif %}
+    </p>
+    {% endfor %}
+{% endblock %}
