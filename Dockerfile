@@ -34,6 +34,9 @@ RUN pip install -r requirements.txt
 COPY app app
 COPY config.py cloud_run_clients.py ./
 
+# Copy over development database
+COPY app.db ./
+
 # Install flask app requirements
 ENV FLASK_APP=cloud_run_clients
 ENV FLASK_ENV=development
