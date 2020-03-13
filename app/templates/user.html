@@ -8,19 +8,17 @@
             </td>
             <td>
                 <h1>{{ user.first_name }} {{ user.last_name }} < {{ user.username }} ></h1>
+                {% if user.about_me %}
+                    <p>{{ user.about_me }}</p>
+                {% endif %}
+                {% if user.last_seen %}
+                    <p>Last seen: {{ user.last_seen }}</p>
+                {% endif %}
             </td>
         </tr>
     </table>
     <hr>
     {% for event in events %}
-    <ul>
-        {% if event.success %}
-        <li>{{ event.service.title }} ({{ event.service.name }} {{ event.service.version }})
-            was successfully generated on {{ event.created.strftime("%A, %b %d, %Y %T %z") }}.</li>
-        {% else %}
-        <li>{{ event.service.title }} ({{ event.service.name }} {{ event.service.version }})
-            failed to generate on {{ event.created }}.</li>
-        {% endif %}
-    </ul>
+        {% include "_event.html" %}
     {% endfor %}
 {% endblock %}

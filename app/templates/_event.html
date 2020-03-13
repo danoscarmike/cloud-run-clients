@@ -1,0 +1,9 @@
+<ul>
+    {% if event.success %}
+    <li>{{ event.service.title }} ({{ event.service.name }} {{ event.service.version }})
+        was successfully generated on {{ event.created.strftime("%A, %b %d, %Y %T %Z") }}</li>
+    {% else %}
+    <li>{{ event.service.title }} ({{ event.service.name }} {{ event.service.version }})
+        failed to generate on {{ event.created.strftime("%A, %b %d, %Y %T %Z") }}</li>
+    {% endif %}
+</ul>

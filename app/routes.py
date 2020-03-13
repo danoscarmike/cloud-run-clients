@@ -1,20 +1,29 @@
 import os
-import sys
 import tarfile
 import zipfile
 
 from app import app, db
-from app.forms import LoginForm, RegistrationForm
+from app.forms import EditProfileForm, LoginForm, RegistrationForm
 from app.models import User, Service
-from flask import flash, Flask, redirect, render_template, request, send_from_directory, url_for
+from datetime import datetime
+from flask import flash, redirect, render_template, \
+    request, send_from_directory, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 from werkzeug.urls import url_parse
 from werkzeug.utils import secure_filename
 
 
+@app.before_request
+def before_request():
+    if current_user.is_authenticated:
+        current_user.last_seen = datetime.utcnow()
+        db.session.commit()
+
+
 def run_protoc(service_name, version):
     os.system(
-        f'/usr/local/bin/protoc /googleapis/google/cloud/{service_name}/{version}/*.proto \
+        f'/usr/local/bin/protoc \
+            /googleapis/google/cloud/{service_name}/{version}/*.proto \
             --proto_path={app.config["PATH_TO_API_COMMON_PROTOS"]} \
             --proto_path={app.config["GOOGLEAPIS"]} \
             --python_gapic_out={app.config["CLIENT_DIR"]}'
@@ -61,10 +70,15 @@ def create_tarball(client_directory, output_directory):
 @app.route('/')
 @app.route('/index')
 def index():
-    return render_template('index.html', title='Home', user=current_user, services=Service.query.all())    
+    return render_template(
+        'index.html',
+        title='Home',
+        user=current_user,
+        services=Service.query.all()
+    )
 
 
-@app.route('/login', methods=['GET','POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
@@ -85,12 +99,13 @@ def login():
 @app.route('/logout')
 def logout():
     '''Logs out current user.
-    
+
     Returns:
         Flask.redirect -- redirects to 'index'
     '''
     logout_user()
     return redirect(url_for('index'))
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -125,6 +140,17 @@ def user(username):
     return render_template('user.html', user=user, events=events)
 
 
+@app.route('/edit_profile')
+@login_required
+def edit_profile():
+    form = EditProfileForm()
+    return render_template(
+        'edit_profile.html',
+        title='Edit Profile',
+        form=form
+    )
+
+
 @app.route('/input')
 def form():
     return """
@@ -147,7 +173,7 @@ def form():
 def generate_client():
     '''Generates client library, creates a tarball containing
     the source code and downloads it.
-    
+
     Raises:
         GeneratorError -- on failure to generate client.
 
@@ -184,7 +210,7 @@ def generate_client():
         """
 
     # call protoc (with gapic plugin) on the uploaded directory
-    run_protoc('vision','v1')
+    run_protoc('vision', 'v1')
 
     # create tar ball for download
     print(f'Client temp directory: {app.config["CLIENT_DIR"]}', flush=True)
