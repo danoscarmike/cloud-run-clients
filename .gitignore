@@ -45,3 +45,6 @@ MANIFEST
 
 #Database
 app.db
+
+#Logs
+/logs/
