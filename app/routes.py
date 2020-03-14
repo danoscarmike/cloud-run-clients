@@ -156,6 +156,32 @@ def edit_profile():
     return render_template('edit_profile.html', title='Edit Profile', form=form)
 
 
+@app.route('/follow/<name>')
+@login_required
+def follow(name):
+    service = Service.query.filter_by(name=name).first()
+    if service is None:
+        flash(f'Service {name} not found.')
+        return redirect(url_for('index'))
+    current_user.follow(service)
+    db.session.commit()
+    flash(f'You are following {service.title} {service.version.upper()}.')
+    return redirect(url_for('user', username=current_user.username))
+
+
+@app.route('/unfollow/<name>')
+@login_required
+def unfollow(name):
+    service = Service.query.filter_by(name=name).first()
+    if service is None:
+        flash(f'Service {name} not found.')
+        return redirect(url_for('index'))
+    current_user.unfollow(service)
+    db.session.commit()
+    flash(f'You are not following {service.title} {service.version.upper()}')
+    return redirect(url_for('user', username=current_user.username))
+
+
 @app.route('/input')
 def form():
     return """
