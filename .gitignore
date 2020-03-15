@@ -13,6 +13,7 @@ venv.bak/
 .DS_Store
 
 # VSCode
+.vscode
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
@@ -41,3 +42,9 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+
+#Database
+app.db
+
+#Logs
+/logs/
