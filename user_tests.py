@@ -54,9 +54,21 @@ class UserModelCase(unittest.TestCase):
         s2 = Service(name='translate', version='v3', updated=datetime.utcnow())
         db.session.add_all([u1, u2, u3, s1, s2])
 
-        e1 = Event(created=datetime.utcnow() + timedelta(seconds=3), service_id=1, user_id=1)
-        e2 = Event(created=datetime.utcnow() + timedelta(seconds=2), service_id=1, user_id=2)
-        e3 = Event(created=datetime.utcnow() + timedelta(seconds=1), service_id=2, user_id=3)
+        e1 = Event(
+            created=datetime.utcnow() + timedelta(seconds=3),
+            service_id=1,
+            user_id=1
+        )
+        e2 = Event(
+            created=datetime.utcnow() + timedelta(seconds=2),
+            service_id=1,
+            user_id=2
+        )
+        e3 = Event(
+            created=datetime.utcnow() + timedelta(seconds=1),
+            service_id=2,
+            user_id=3
+        )
         db.session.add_all([e1, e2, e3])
         db.session.commit()
 
