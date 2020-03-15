@@ -1,10 +1,10 @@
-<ul>
+<ul class="list-group">
     {% if event.success %}
-    <li>{{ event.service.title }} ({{ event.service.name }} {{ event.service.version }})
+    <li class="list-group-item">{{ event.service.title }} ({{ event.service.name }} {{ event.service.version }})
         was successfully generated on {{ event.created.strftime("%A, %b %d, %Y") }} at
         {{ event.created.strftime("%T %Z") }}</li>
     {% else %}
-    <li>{{ event.service.title }} ({{ event.service.name }} {{ event.service.version }})
+    <li class="list-group-item">{{ event.service.title }} ({{ event.service.name }} {{ event.service.version }})
         failed to generate on {{ event.created.strftime("%A, %b %d, %Y") }} at
         {{ event.created.strftime("%T %Z") }}</li>
     {% endif %}

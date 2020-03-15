@@ -1,23 +1,28 @@
-<html>
-    <head>
-        {% if title %}
-        <title>{{ title }} - Cloud Run Clients</title>
+{% extends 'bootstrap/base.html' %}
+
+{% block title %}
+    {% if title %}
+        {{ title }} - Cloud Run Clients
+    {% else %}
+        Welcome to Cloud Run Clients!
+    {% endif %}
+{% endblock %}
+
+{% block navbar %}
+    <nav class="navbar navbar-default">
+        Cloud Run Clients:
+        <a href="{{ url_for('index') }}">Home</a> |
+        {% if current_user.is_anonymous %}
+        <a href="{{ url_for('login') }}">Login</a>
         {% else %}
-        <title>Welcome to Cloud Run Clients!</title>
+        <a href="{{ url_for('user', username=current_user.username) }}">Profile</a> |
+        <a href="{{ url_for('logout') }}">Logout</a>
         {% endif %}
-    </head>
-    <body>
-        <div id="header">
-            Cloud Run Clients: 
-            <a href="{{ url_for('index') }}">Home</a> | 
-            {% if current_user.is_anonymous %}
-            <a href="{{ url_for('login') }}">Login</a>
-            {% else %}
-            <a href="{{ url_for('user', username=current_user.username) }}">Profile</a> | 
-            <a href="{{ url_for('logout') }}">Logout</a>
-            {% endif %}
-        </div>
-        <hr>
+    </nav>
+{% endblock %}
+
+{% block content %}
+    <div class="container">
         {% with messages = get_flashed_messages() %}
         {% if messages %}
         <ul>
@@ -27,10 +32,11 @@
         </ul>
         {% endif %}
         {% endwith %}
-        {% block content %}{% endblock %}
-        <hr>
-        <div id="footer">
-            <p>&copy; Copyright <a href="http://www.danoscarmike.com">DanO/M</a> 2020</p>
-        </div>
-    </body>
-</html>
+
+        {% block app_content %}{% endblock %}
+    </div>
+    <div class="modal-footer">
+        <p>&copy; Copyright <a href="http://www.danoscarmike.com">DanO/M</a> 2020</p>
+    </div>
+{% endblock %}
+
