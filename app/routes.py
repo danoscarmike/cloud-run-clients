@@ -1,17 +1,29 @@
 import os
-import sys
 import tarfile
-from werkzeug.utils import secure_filename
 import zipfile
 
-from app import app
+from app import app, db
+from app.forms import EditProfileForm, LoginForm, RegistrationForm
+from app.models import User, Service
+from datetime import datetime
+from flask import flash, redirect, render_template, \
+    request, send_from_directory, url_for
+from flask_login import current_user, login_required, login_user, logout_user
+from werkzeug.urls import url_parse
+from werkzeug.utils import secure_filename
 
-from flask import Flask, request, send_from_directory
+
+@app.before_request
+def before_request():
+    if current_user.is_authenticated:
+        current_user.last_seen = datetime.utcnow()
+        db.session.commit()
 
 
 def run_protoc(service_name, version):
     os.system(
-        f'/usr/local/bin/protoc /googleapis/google/cloud/{service_name}/{version}/*.proto \
+        f'/usr/local/bin/protoc \
+            /googleapis/google/cloud/{service_name}/{version}/*.proto \
             --proto_path={app.config["PATH_TO_API_COMMON_PROTOS"]} \
             --proto_path={app.config["GOOGLEAPIS"]} \
             --python_gapic_out={app.config["CLIENT_DIR"]}'
@@ -45,9 +57,9 @@ def get_all_file_paths(directory):
 def create_tarball(client_directory, output_directory):
     '''Creates a tarball from generated client files
 
-    Args:
-        client_directory: location of files to add to the tarball
-        target_directory: location to save the created tarball
+    Arguments:
+        client_directory {string} -- location of files to add to the tarball
+        target_directory {string} -- location to save the created tarball
     '''
     os.chdir(output_directory)
     t = tarfile.open('client.tar.gz', mode='w:gz')
@@ -57,6 +69,122 @@ def create_tarball(client_directory, output_directory):
 
 @app.route('/')
 @app.route('/index')
+def index():
+    return render_template(
+        'index.html',
+        title='Home',
+        user=current_user,
+        services=Service.query.all()
+    )
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=form.username.data).first()
+        if user is None or not user.check_password(form.password.data):
+            flash('Invalid username or password')
+            return redirect(url_for('login'))
+        login_user(user, remember=form.remember_me.data)
+        next_page = request.args.get('next')
+        if not next_page or url_parse(next_page).netloc != '':
+            next_page = url_for('index')
+        return redirect(next_page)
+    return render_template('login.html', title='Sign In', form=form)
+
+
+@app.route('/logout')
+def logout():
+    '''Logs out current user.
+
+    Returns:
+        Flask.redirect -- redirects to 'index'
+    '''
+    logout_user()
+    return redirect(url_for('index'))
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    '''Registers new user.
+    '''
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        user = User(
+            first_name=form.first_name.data,
+            last_name=form.last_name.data,
+            username=form.username.data,
+            email=form.email.data
+        )
+        user.set_password(form.password.data)
+        db.session.add(user)
+        db.session.commit()
+        login_user(user)
+        next_page = request.args.get('next')
+        if not next_page or url_parse(next_page).netloc != '':
+            next_page = url_for('index')
+        return redirect(next_page)
+    return render_template('register.html', title='Register', form=form)
+
+
+@app.route('/user/<username>')
+@login_required
+def user(username):
+    user = User.query.filter_by(username=username).first_or_404()
+    events = user.events
+    return render_template('user.html', user=user, events=events)
+
+
+@app.route('/edit_profile', methods=['GET', 'POST'])
+@login_required
+def edit_profile():
+    form = EditProfileForm(current_user.username)
+    if form.validate_on_submit():
+        current_user.username = form.username.data
+        current_user.about_me = form.about_me.data
+        db.session.commit()
+        flash('Your changes have been saved.')
+        return redirect(url_for('edit_profile'))
+    elif request.method == 'GET':
+        form.username.data = current_user.username
+        form.about_me.data = current_user.about_me
+    return render_template('edit_profile.html',
+                           title='Edit Profile',
+                           form=form)
+
+
+@app.route('/follow/<name>')
+@login_required
+def follow(name):
+    service = Service.query.filter_by(name=name).first()
+    if service is None:
+        flash(f'Service {name} not found.')
+        return redirect(url_for('index'))
+    current_user.follow(service)
+    db.session.commit()
+    flash(f'You are following {service.title} {service.version.upper()}.')
+    return redirect(url_for('user', username=current_user.username))
+
+
+@app.route('/unfollow/<name>')
+@login_required
+def unfollow(name):
+    service = Service.query.filter_by(name=name).first()
+    if service is None:
+        flash(f'Service {name} not found.')
+        return redirect(url_for('index'))
+    current_user.unfollow(service)
+    db.session.commit()
+    flash(f'You are not following {service.title} {service.version.upper()}')
+    return redirect(url_for('user', username=current_user.username))
+
+
+@app.route('/input')
 def form():
     return """
         <html>
@@ -73,8 +201,18 @@ def form():
     """
 
 
-@app.route('/generate', methods=["POST"])
+@app.route('/generate', methods=['POST'])
+@login_required
 def generate_client():
+    '''Generates client library, creates a tarball containing
+    the source code and downloads it.
+
+    Raises:
+        GeneratorError -- on failure to generate client.
+
+    Returns:
+        Flask.redirect -- redirects on success.
+    '''
     # upload zip/tarball of files from web form
     in_file = request.files['proto_files']
 
@@ -105,7 +243,7 @@ def generate_client():
         """
 
     # call protoc (with gapic plugin) on the uploaded directory
-    run_protoc('vision','v1')
+    run_protoc('vision', 'v1')
 
     # create tar ball for download
     print(f'Client temp directory: {app.config["CLIENT_DIR"]}', flush=True)
@@ -128,6 +266,7 @@ def generate_client():
 
 
 @app.route('/download', methods=["GET"])
+@login_required
 def download():
     return send_from_directory(
             directory=app.config['DOWNLOAD_DIR'],

@@ -1,4 +1,6 @@
-Demo of Google client library generators on Cloud Run
+![Python package](https://github.com/danoscarmike/cloud-run-clients/workflows/Python%20package/badge.svg)
+
+Dockerized Flask app running Google API Client Library generators.
 
 To run using Docker:
 1. fork and/or clone this repository

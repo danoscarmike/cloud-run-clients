@@ -1,4 +1,6 @@
 # Things I've learned from this project
+
+## Bootstrapping phase
 - You can't ADD files to a Docker image from outside the current context. (I think this means you can only `ADD` files from the same directory that holds your `Dockerfile`.)
 - ~~Working with tarfiles is a pain in the neck.~~
 - ~~Working wiht tempfiles is a pain in the neck.~~ 
