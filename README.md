@@ -1,3 +1,5 @@
+![Python package](https://github.com/danoscarmike/cloud-run-clients/workflows/Python%20package/badge.svg)
+
 Dockerized Flask app running Google API Client Library generators.
 
 To run using Docker:

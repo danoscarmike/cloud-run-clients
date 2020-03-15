@@ -1,7 +1,9 @@
 from app.models import User
 from flask_wtf import FlaskForm
-from wtforms import BooleanField, PasswordField, StringField, SubmitField, TextAreaField
-from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationError
+from wtforms import BooleanField, PasswordField, StringField, SubmitField,\
+    TextAreaField
+from wtforms.validators import DataRequired, Email, EqualTo, Length, \
+    ValidationError
 
 
 class EditProfileForm(FlaskForm):
@@ -22,19 +24,24 @@ class EditProfileForm(FlaskForm):
 
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(message="*")])
-    password = PasswordField('Password', validators=[DataRequired(message="*")])
+    password = PasswordField('Password',
+                             validators=[DataRequired(message="*")])
     remember_me = BooleanField('Remember Me')
     submit = SubmitField('Sign In')
 
 
 class RegistrationForm(FlaskForm):
-    first_name = StringField('First Name', validators=[DataRequired(message="*")])
-    last_name = StringField('Last Name', validators=[DataRequired(message="*")])
-    email = StringField('Email', validators=[DataRequired(message="*"), Email()])
+    first_name = StringField('First Name',
+                             validators=[DataRequired(message="*")])
+    last_name = StringField('Last Name',
+                            validators=[DataRequired(message="*")])
+    email = StringField('Email', validators=[DataRequired(message="*"),
+                                             Email()])
     username = StringField('Username', validators=[DataRequired(message="*")])
-    password = PasswordField('Password', validators=[DataRequired(message="*")])
+    password = PasswordField('Password',
+                             validators=[DataRequired(message="*")])
     password2 = PasswordField(
-        'Repeat Password', 
+        'Repeat Password',
         validators=[DataRequired(message="*"), EqualTo('password')]
     )
     submit = SubmitField('Register')
@@ -47,4 +54,5 @@ class RegistrationForm(FlaskForm):
     def validate_email(self, email):
         user = User.query.filter_by(email=email.data).first()
         if user is not None:
-            raise ValidationError('An account with this email address already exists.')
+            raise ValidationError('An account with this email address'
+                                  'already exists.')

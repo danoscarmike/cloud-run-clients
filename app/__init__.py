@@ -33,8 +33,11 @@ if not app.debug:
 
     if not os.path.exists('logs'):
         os.mkdir('logs')
-    file_handler = RotatingFileHandler('logs/cloud_run_clients.log', maxBytes=10240,
-                                       backupCount=10)
+    file_handler = RotatingFileHandler(
+        'logs/cloud_run_clients.log',
+        maxBytes=10240,
+        backupCount=10
+    )
     file_handler.setFormatter(logging.Formatter(
         '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'))
     file_handler.setLevel(logging.INFO)
@@ -44,4 +47,4 @@ if not app.debug:
     app.logger.info('Cloud Run Clients startup')
 
 
-from app import errors, routes, models
+from app import errors, routes, models   # noqa: E402, F401

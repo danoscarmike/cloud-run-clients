@@ -45,7 +45,8 @@ class User(UserMixin, db.Model):
         return f'https://www.gravatar.com/avatar/{digest}?d=robohash&s={size}'
 
     def is_following(self, service):
-        return self.services_followed.filter(followers.c.followed_service_id == service.id).count() > 0
+        return self.services_followed.filter(
+            followers.c.followed_service_id == service.id).count() > 0
 
     def follow(self, service):
         if not self.is_following(service):
@@ -57,7 +58,8 @@ class User(UserMixin, db.Model):
 
     def followed_events(self):
         return Event.query.join(
-            followers, (followers.c.followed_service_id == Event.service_id)).filter(
+            followers, (followers.c.followed_service_id ==
+                        Event.service_id)).filter(
                 followers.c.follower_id == self.id).order_by(
                     Event.created.desc())
 
