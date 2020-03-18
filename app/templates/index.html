@@ -9,7 +9,11 @@
     <p>Choose a client to generate:</p>
     {% for service in services %}
     <div>
-        <p><a href="{{ url_for('generate_client') }}">{{ service.title }}</a></p>
+        {% if service.title %}
+        <p><a href="{{ url_for('generate_client') }}">{{ service.title }} {{ service.version }}</a></p>
+        {% else %}
+        <p><a href="{{ url_for('generate_client') }}">{{ service.name }} {{ service.version }}</a></p>
+        {% endif %}
     </div>
     {% endfor %}
 {% endblock %}

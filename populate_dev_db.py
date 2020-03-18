@@ -3,6 +3,7 @@ import pytz
 from app import db
 from app.enums import ProtoSourceEnum
 from app.models import User, Service, Event
+from connectors.google_apis import get_api_details, list_apis, list_api_versions
 from datetime import datetime as dt
 
 
@@ -61,12 +62,28 @@ language = Service(
     updated=pytz.utc.localize(dt.utcnow())
 )
 
+for api in list_apis():
+    for version in list_api_versions(api):
+        if Service.query.filter_by(name=api, version=version).first() is None:
+            title, summary = get_api_details(api, version)
+            new_service = Service(
+                name=api,
+                version=version,
+                title=title,
+                summary=summary,
+                proto_source=ProtoSourceEnum.googleapis,
+                is_google_api=True,
+                updated=pytz.utc.localize(dt.utcnow())
+            )
+            db.session.add(new_service)
+
+
 db.session.add(dan)
 db.session.add(monkey)
 db.session.add(gorilla)
-db.session.add(vision)
-db.session.add(translate)
-db.session.add(language)
+# db.session.add(vision)
+# db.session.add(translate)
+# db.session.add(language)
 
 dan_event1 = Event(
     created=pytz.utc.localize(dt.utcnow()),

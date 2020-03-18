@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 7585a600a8df
-Revises: 9a2c61a3901a
-Create Date: 2020-03-14 20:25:13.333384
+Revision ID: 0b4ec66ef865
+Revises: 
+Create Date: 2020-03-17 20:55:24.930714
 
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '7585a600a8df'
-down_revision = '9a2c61a3901a'
+revision = '0b4ec66ef865'
+down_revision = None
 branch_labels = None
 depends_on = None
 
@@ -23,6 +23,7 @@ def upgrade():
     sa.Column('name', sa.String(length=128), nullable=True),
     sa.Column('title', sa.String(length=128), nullable=True),
     sa.Column('version', sa.String(length=64), nullable=True),
+    sa.Column('summary', sa.String(length=512), nullable=True),
     sa.Column('proto_url', sa.String(length=128), nullable=True),
     sa.Column('proto_source', sa.Enum('googleapis', 'user', name='protosourceenum'), nullable=True),
     sa.Column('is_google_api', sa.Boolean(), nullable=True),

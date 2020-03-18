@@ -69,6 +69,7 @@ class Service(db.Model):
     name = db.Column(db.String(128), index=True)
     title = db.Column(db.String(128))
     version = db.Column(db.String(64))
+    summary = db.Column(db.String(512))
     proto_url = db.Column(db.String(128))
     proto_source = db.Column(db.Enum(ProtoSourceEnum))
     is_google_api = db.Column(db.Boolean)
