@@ -1,4 +1,3 @@
 FLASK_APP=cloud_run_clients
 FLASK_DEBUG=1
 FLASK_ENV=development
-GH_TOKEN=619e0508a4102bfccfdb4b040353b44ab5b9e240
