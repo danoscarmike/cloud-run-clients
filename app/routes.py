@@ -1,3 +1,4 @@
+import app.google_apis as gapi
 import os
 import tarfile
 import zipfile
@@ -20,12 +21,12 @@ def before_request():
         db.session.commit()
 
 
-def run_protoc(service_name, version):
+def run_protoc():
     os.system(
         f'/usr/local/bin/protoc \
-            /googleapis/google/cloud/{service_name}/{version}/*.proto \
+            *.proto \
             --proto_path={app.config["PATH_TO_API_COMMON_PROTOS"]} \
-            --proto_path={app.config["GOOGLEAPIS"]} \
+            --proto_path={app.config["PROTO_DIR"]} \
             --python_gapic_out={app.config["CLIENT_DIR"]}'
     )
 
@@ -201,12 +202,12 @@ def form():
     """
 
 
-# @app.route('/generate/<servicename>', methods=['GET'])
-@app.route('/generate', methods=['GET'])
+@app.route('/generate/<api>/<version>', methods=['GET'])
+# @app.route('/generate', methods=['GET'])
 @login_required
 # TODO(danom) pass servicname to method
 # TODO(danom) rewrite method to get proto files from either tarball, or from googleapis
-def generate_client():
+def generate_client(api, version):
     '''Generates client library, creates a tarball containing
     the source code and downloads it.
 
@@ -217,55 +218,44 @@ def generate_client():
         Flask.redirect -- redirects on success.
     '''
     # upload zip/tarball of files from web form
-    in_file = request.files['proto_files']
-
-    if not in_file:
-        return "No file"
-
-    in_file_name = secure_filename(in_file.filename)
-    in_file_path = os.path.join(app.config['UPLOAD_DIR'], in_file_name)
-    in_file.save(in_file_path)
+    # in_file = request.files['proto_files']
+    #
+    # if not in_file:
+    #     return "No file"
+    #
+    # in_file_name = secure_filename(in_file.filename)
+    # in_file_path = os.path.join(app.config['UPLOAD_DIR'], in_file_name)
+    # in_file.save(in_file_path)
 
     # check file safety??
     # check type of uploaded file is tar or zip and extract
 
-    if tarfile.is_tarfile(in_file_path):
-        tf_in = tarfile.open(in_file_path, mode='r:gz')
-        tf_in.extractall(path=app.config['PROTO_DIR'])
-    elif zipfile.is_zipfile(in_file_path):
-        zf_in = zipfile.ZipFile(in_file, 'r')
-        zf_in.extractall(path=app.config['PROTO_DIR'])
-    else:
-        return """
-        <html>
-            <body>
-                <h1>Not a valid file.</h1>
-                <p>Please upload tar.gz or zip only.</p>
-            </body>
-        </html>
-        """
+    # if tarfile.is_tarfile(in_file_path):
+    #     tf_in = tarfile.open(in_file_path, mode='r:gz')
+    #     tf_in.extractall(path=app.config['PROTO_DIR'])
+    # elif zipfile.is_zipfile(in_file_path):
+    #     zf_in = zipfile.ZipFile(in_file, 'r')
+    #     zf_in.extractall(path=app.config['PROTO_DIR'])
+    # else:
+    #     return """
+    #     <html>
+    #         <body>
+    #             <h1>Not a valid file.</h1>
+    #             <p>Please upload tar.gz or zip only.</p>
+    #         </body>
+    #     </html>
+    #     """
 
+    gapi.get_api_protos(api, version)
     # call protoc (with gapic plugin) on the uploaded directory
-    run_protoc('vision', 'v1')
+    run_protoc()
 
     # create tar ball for download
     print(f'Client temp directory: {app.config["CLIENT_DIR"]}', flush=True)
     print(f'Download temp directory: {app.config["DOWNLOAD_DIR"]}', flush=True)
     create_tarball(app.config["CLIENT_DIR"], app.config["DOWNLOAD_DIR"])
 
-    return """
-        <html>
-            <body>
-                <h1>Success!</h1>
-                <p>Your client awaits...</p>
-                <body class="body">
-                    <div class="container" align="left">
-                        <a href="/download" target="blank">
-                            <button>Download!</button></a>
-                    </div>
-                </body>
-        </html>
-    """
+    return render_template('download.html')
 
 
 @app.route('/download', methods=["GET"])

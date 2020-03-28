@@ -40,6 +40,8 @@ COPY app.db ./
 # Install flask app requirements
 ENV FLASK_APP=cloud_run_clients
 ENV FLASK_ENV=development
+# TODO(danom) need to set GH_TOKEN
 
+EXPOSE 5000
 # Spin up flask app
 ENTRYPOINT ["flask", "run", "--host", "0.0.0.0"]

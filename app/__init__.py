@@ -50,4 +50,4 @@ if not app.debug:
     app.logger.info('Cloud Run Clients startup')
 
 
-from app import errors, routes, models   # noqa: E402, F401
+from app import errors, google_apis, routes, models   # noqa: E402, F401

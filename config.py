@@ -5,6 +5,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 class Config(object):
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
+    GH_TOKEN = os.environ.get('GH_TOKEN')
     PATH_TO_API_COMMON_PROTOS = '/protos/'
     GOOGLEAPIS = '/googleapis/'
     UPLOAD_DIR = os.path.join(os.getcwd(), "upload")
