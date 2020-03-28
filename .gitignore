@@ -8,6 +8,8 @@ ENV/
 env.bak/
 venv.bak/
 
+.flaskenv
+
 /samples
 /.idea
 .DS_Store
