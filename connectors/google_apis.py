@@ -6,7 +6,7 @@ import requests
 
 
 # Authenticate with GitHub using Personal Access Token
-g = github3.login(token=os.environ["GH_TOKEN"])
+g = github3.login(token=os.environ['GH_TOKEN'])
 r = g.repository('googleapis', 'googleapis')
 
 
@@ -29,7 +29,7 @@ def list_api_versions(api):
 
 
 def get_api_details(api, version):
-    api_title = api_summary = None
+    api_title = api_summary = proto_url = None
     service_configs = [f'{api}_{version}.yaml',
                        f'{api}.yaml',
                        f'cloud{api}_{version}.yaml',
@@ -40,6 +40,7 @@ def get_api_details(api, version):
             # TODO: use Github-Flask instead of rolling own with requests
             res = requests.get(c[service_config].git_url, auth=('danoscarmike',os.environ['GH_TOKEN']))
             if res.status_code == 200:
+                proto_url = f'https://github.com/googleapis/googleapis/tree/master/google/cloud/{api}/{version}'
                 content = res.json()['content']
                 config_file = yaml.safe_load(base64.b64decode(content).decode('utf-8'))
                 if 'title' in config_file:
@@ -49,11 +50,16 @@ def get_api_details(api, version):
                         api_summary = config_file['documentation']['summary']
             else:
                 print(res.status_code)
-    return api_title, api_summary
+    return api_title, api_summary, proto_url
 
 
 if __name__ == '__main__':
-    api_dict = {}
-    api_title, api_summary = get_api_details('vision', 'v1')
+    api = list_apis()[25]
+    versions = list_api_versions(api)
+    api_title, api_summary, proto_url = get_api_details(api, versions[0])
+    print(api)
+    print(versions)
     print(api_title)
-    print(len(api_summary))
+    print(api_summary)
+    print(proto_url)
+

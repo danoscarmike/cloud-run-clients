@@ -201,8 +201,11 @@ def form():
     """
 
 
-@app.route('/generate', methods=['POST'])
+# @app.route('/generate/<servicename>', methods=['GET'])
+@app.route('/generate', methods=['GET'])
 @login_required
+# TODO(danom) pass servicname to method
+# TODO(danom) rewrite method to get proto files from either tarball, or from googleapis
 def generate_client():
     '''Generates client library, creates a tarball containing
     the source code and downloads it.

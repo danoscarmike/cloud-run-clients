@@ -2,10 +2,10 @@
 
 {% block app_content %}
     {% if current_user.is_anonymous %}
-    <h1>Hi there! Do we know each other?</h1>
+        <h1>Hi there!</h1>
+        <h3>Do we know each other?</h3>
     {% else %}
     <h1>Hi {{ current_user.first_name }}!</h1>
-    {% endif %}
     <p>Choose a client to generate:</p>
     {% for service in services %}
     <div>
@@ -16,4 +16,5 @@
         {% endif %}
     </div>
     {% endfor %}
+    {% endif %}
 {% endblock %}
